@@ -5,10 +5,12 @@ workspaceH = workspaceW * 270 / 170;
 
 cameraLocation = [0, 0];
 cameraAngle = 180;
+maxDistanceFromCameraInWorkspace = Math.max(workspaceW, workspaceH) / 2;
 renderCameraDirection = true;
 
 apiInput = {
-  "width": 640, "height": 448,
+  "width": 640, "height": 448, 
+  "cameraFovAngle": 130,
   "bboxList": [
     {"x": 0, "w": 50, "d": 0.7},
     {"x": 400, "w": 50, "d": 0.9},
@@ -16,18 +18,25 @@ apiInput = {
   ]
 };
 
+// apiInput = {
+//   "width": 640, "height": 448, 
+//   "cameraFovAngle": 130,
+//   "bboxList": [
+//     {"x": 0, "w": 50, "d": 0.2},
+//     {"x": 0, "w": 50, "d": 0.5},
+//     {"x": 0, "w": 50, "d": 0.9},
+//     {"x": 320, "w": 50, "d": 0.2},
+//     {"x": 320, "w": 50, "d": 0.5},
+//     {"x": 320, "w": 50, "d": 0.9},
+//     {"x": 640, "w": 50, "d": 0.2},
+//     {"x": 640, "w": 50, "d": 0.5},
+//     {"x": 640, "w": 50, "d": 0.9}
+//   ]
+// };
+
 apiDistanceLimits = [0.6, 0.8];
 
 // Rendering
-
-univW = 500;
-univH = 400;
-
-minDim = Math.min(univW, univH);
-
-multiplierW = minDim / 400;
-multiplierH = minDim / 400;
-multiplierZ = minDim / 400;
 
 let carModel;
 let roadTexture;
@@ -37,6 +46,17 @@ function preload()
   roadTexture = loadImage('assets/roadTexture.jpg');
 }
 
+
+let univW;
+let univH;
+
+let minDim;
+
+let multiplierW;
+let multiplierH;
+let multiplierZ;
+
+let maxDistanceFromCameraInUniv;
 function setup() {
   univW = windowWidth;
   univH = windowHeight;
@@ -46,6 +66,8 @@ function setup() {
   multiplierW = minDim / 400;
   multiplierH = minDim / 400;
   multiplierZ = minDim / 400;
+
+  maxDistanceFromCameraInUniv = maxDistanceFromCameraInWorkspace * Math.max(multiplierW, multiplierH);
 
   createCanvas(univW, univH, WEBGL);
 }
@@ -105,6 +127,7 @@ function plotApiData()
   
   dimW = apiInput.width;
   dimH = apiInput.height;
+  cameraFovAngle = apiInput.cameraFovAngle;
   for (el of apiInput.bboxList)
   {
     selColor = redColor;
@@ -114,23 +137,26 @@ function plotApiData()
       selColor = greenColor;
     
     stroke(outlineColor);
-    x = calcX(el, dimW);
-    y = calcY(el, dimH);
+    thetaDegree = el.x * cameraFovAngle / dimW;
+    offsetAngleDegree = (180 - thetaDegree) / 4;
+    offsetAppliedThetaDegree = offsetAngleDegree + thetaDegree;
+    appliedThetaRadian = offsetAppliedThetaDegree * Math.PI / 180;
+    distanceFromCameraUniv = el.d * maxDistanceFromCameraInUniv;
+    x = calcX(distanceFromCameraUniv, appliedThetaRadian);
+    y = calcY(distanceFromCameraUniv, appliedThetaRadian);
+    console.log(x, y);
     plotCar(x, y, selColor);
   }
 }
 
-function calcX(el, mWidth)
+function calcX(distance, theta)
 {
-  mulL2W = workspaceW / mWidth;
-  return - el.x * mulL2W * multiplierW + 
-    int(workspaceW * multiplierW / 2);
+  return Math.cos(theta) * distance;
 }
 
-function calcY(el, mHeight)
+function calcY(distance, theta)
 {
-  mulL2W = workspaceH / 2;
-  return el.d * mulL2W * multiplierH;
+  return Math.sin(theta) * distance;
 }
 
 function plotCameraDirection()
