@@ -7,6 +7,7 @@ cameraLocation = [0, 0];
 cameraAngle = 180;
 maxDistanceFromCameraInWorkspace = Math.max(workspaceW, workspaceH) / 2;
 renderCameraDirection = true;
+renderCameraFov = true;
 
 apiInput = {
   "width": 640, "height": 448, 
@@ -57,6 +58,7 @@ let multiplierH;
 let multiplierZ;
 
 let maxDistanceFromCameraInUniv;
+let minDistanceFromCameraGap;
 function setup() {
   univW = windowWidth;
   univH = windowHeight;
@@ -68,6 +70,7 @@ function setup() {
   multiplierZ = minDim / 400;
 
   maxDistanceFromCameraInUniv = maxDistanceFromCameraInWorkspace * Math.max(multiplierW, multiplierH);
+  minDistanceFromCameraGap = 10 * multiplierW;
 
   createCanvas(univW, univH, WEBGL);
 }
@@ -115,6 +118,8 @@ function plotData()
   plotCameraSprite();
   if (renderCameraDirection)
     plotCameraDirection();
+  if (renderCameraFov)
+    plotCameraFov();
   plotApiData();
 }
 
@@ -141,7 +146,7 @@ function plotApiData()
     offsetAngleDegree = (180 - thetaDegree) / 4;
     offsetAppliedThetaDegree = offsetAngleDegree + thetaDegree;
     appliedThetaRadian = offsetAppliedThetaDegree * Math.PI / 180;
-    distanceFromCameraUniv = el.d * maxDistanceFromCameraInUniv;
+    distanceFromCameraUniv = el.d * maxDistanceFromCameraInUniv + minDistanceFromCameraGap;
     x = calcX(distanceFromCameraUniv, appliedThetaRadian);
     y = calcY(distanceFromCameraUniv, appliedThetaRadian);
     console.log(x, y);
@@ -170,6 +175,35 @@ function plotCameraDirection()
   pop();
 }
 
+function plotCameraFov()
+{
+  push();
+  translate(0, 0, 10 * multiplierZ + 1);
+  stroke(color(200));
+
+  thetaDegree = 0;
+  offsetAngleDegree = (180 - thetaDegree) / 4;
+  offsetAppliedThetaDegree = offsetAngleDegree + thetaDegree;
+  appliedThetaRadian = offsetAppliedThetaDegree * Math.PI / 180;
+  distanceFromCameraUniv = 0.6 * maxDistanceFromCameraInUniv + minDistanceFromCameraGap;
+  x = calcX(distanceFromCameraUniv, appliedThetaRadian);
+  y = calcY(distanceFromCameraUniv, appliedThetaRadian);
+
+  line(0, 0, x, y);
+
+  cameraFovAngle = apiInput.cameraFovAngle;
+  thetaDegree = cameraFovAngle;
+  offsetAngleDegree = (180 - thetaDegree) / 4;
+  offsetAppliedThetaDegree = offsetAngleDegree + thetaDegree;
+  appliedThetaRadian = offsetAppliedThetaDegree * Math.PI / 180;
+  distanceFromCameraUniv = 0.6 * maxDistanceFromCameraInUniv + minDistanceFromCameraGap;
+  x = calcX(distanceFromCameraUniv, appliedThetaRadian);
+  y = calcY(distanceFromCameraUniv, appliedThetaRadian);
+
+  line(0, 0, x, y);
+  pop();
+}
+
 function plotCameraSprite()
 {
   fill(color(0,191,255, 150));
@@ -190,15 +224,15 @@ function plotCar(x, y, colorParam)
   pop();
 }
 
-function plotCar_orig(x, y)
-{
-  push();
-  translate(x, y, 10 * multiplierZ + 1);
-  box(15 * multiplierW,
-      30 * multiplierH,
-      10 * multiplierZ);
-  pop();
-}
+// function plotCar_orig(x, y)
+// {
+//   push();
+//   translate(x, y, 10 * multiplierZ + 1);
+//   box(15 * multiplierW,
+//       30 * multiplierH,
+//       10 * multiplierZ);
+//   pop();
+// }
 
 function skybox()
 {
